@@ -1,24 +1,32 @@
 import { rest } from "msw";
 
-export const handlers = [
-  rest.post("/login", (req, res, ctx) => {
+const accountHandler = [
+  rest.post("/api/login", (req, res, ctx) => {
     sessionStorage.setItem("is-authenticated", "true");
+    if (req.body.id === "test@co.kr") {
+      return res(
+        ctx.status(200),
+        ctx.json({
+          accessToken: { token: "bearer token", expires: "2022-10-22" },
+          user: {
+            nickName: "신영",
+            id: "test@co.kr",
+          },
+        })
+      );
+    }
     return res(
-      ctx.status(200),
+      ctx.status(400),
       ctx.json({
-        accessToken: { token: "bearer token", expires: "2022-10-22" },
-        user: {
-          nickName: "신영",
-          id: "test@co.kr",
-        },
+        errorMessage: "잘못된 id 입력",
       })
     );
   }),
-  rest.post("/signUp", (req, res, ctx) => {
+  rest.post("/api/signUp", (req, res, ctx) => {
     sessionStorage.setItem("is-authenticated", "true");
     return res(ctx.status(200));
   }),
-  rest.get("/user", (req, res, ctx) => {
+  rest.get("/api/user", (req, res, ctx) => {
     const isAuthenticated = sessionStorage.getItem("is-authenticated");
     if (!isAuthenticated) {
       return res(
@@ -37,3 +45,5 @@ export const handlers = [
     );
   }),
 ];
+
+export default accountHandler;
