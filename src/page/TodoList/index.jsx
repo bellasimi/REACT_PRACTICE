@@ -1,12 +1,38 @@
 import Todo from "./Todo";
-import useLocalStorage from "hook/useLocalStorage";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { postTask, delTask, patchTask } from "service";
+import useAxios from "hook/useAxios";
+import { useTaskContext, useSetTaskContext } from "taskContext";
 const MAX_LENGTH = 15;
 const MIN_LENGTH = 1;
 
 const TodoList = () => {
-  const [todoList, setTodoList] = useLocalStorage("todoList", []);
+  const [todoList, setTodoList] = useState(null);
   const [content, setContent] = useState("");
+  const tasks = useTaskContext();
+  const { onGetTasks } = useSetTaskContext();
+  useEffect(() => {
+    onGetTasks();
+  }, []);
+
+  const { isLoading: isAddTaskLoading, request: addTaskAxios } = useAxios({
+    apiFn: postTask,
+    onSuccess: (todoList) => {
+      setTodoList(todoList);
+    },
+  });
+  const { isLoading: isDelTaskLoading, request: delTaskAxios } = useAxios({
+    apiFn: delTask,
+    onSuccess: (todoList) => {
+      setTodoList(todoList);
+    },
+  });
+  const { isLoading: isDoneTaskLoading, request: patchTaskAxios } = useAxios({
+    apiFn: patchTask,
+    onSuccess: (todoList) => {
+      setTodoList(todoList);
+    },
+  });
 
   const validateContent = (e) => {
     const { value } = e.target;
@@ -29,27 +55,19 @@ const TodoList = () => {
       content,
       isCompleted: false,
     };
-
-    setTodoList([...todoList, newTodo]);
+    !isAddTaskLoading && addTaskAxios(newTodo);
   };
+
   const handleRemoveTodo = (id) => {
-    setTodoList(todoList.filter((todo) => todo.id !== id));
+    !isDelTaskLoading && delTaskAxios(id);
   };
   const handleDoneTodo = (id) => {
-    setTodoList(
-      todoList.map((todo) => {
-        if (todo.id === id) {
-          todo.isCompleted = true;
-          return todo;
-        }
-        return todo;
-      })
-    );
+    !isDoneTaskLoading && patchTaskAxios(id);
   };
   return (
     <div>
       <ul>
-        {todoList.map((todo) => (
+        {tasks?.map((todo) => (
           <Todo
             key={todo.id}
             todo={todo}
