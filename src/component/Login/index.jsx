@@ -4,31 +4,32 @@ import { useNavigate } from "react-router-dom";
 import styled from "@emotion/styled";
 import Flex from "component/Flex";
 import useLocalStorage from "hook/useLocalStorage";
+import { postLogin } from "service";
+import useAxios from "hook/useAxios";
 
 const Login = () => {
   const navigate = useNavigate();
-  const [user, setUser] = useLocalStorage("TodoUser", {});
-  const [token, setToken] = useLocalStorage("TodoToken", {});
-  const [_, errors, validate, handleSubmit] = useForm({
+  const [, setUser] = useLocalStorage("TodoUser", {});
+  const [, setToken] = useLocalStorage("TodoToken", {});
+  const { isLoading, request } = useAxios({
+    apiFn: postLogin,
+    onSuccess: ({ accessToken, user }) => {
+      setToken(accessToken);
+      setUser(user);
+      navigate("/todoList");
+    },
+  });
+
+  const [, errors, validate, handleSubmit] = useForm({
     initialValue: {
       id: "",
       password: "",
     },
     onSubmit: async (values) => {
-      const data = await fetch("/login", {
-        method: "POST",
-        body: JSON.stringify(values),
-      })
-        .then((result) => result.json())
-        .catch((error) => console.error(error));
-      if (data) {
-        const { accessToken, user } = data;
-        setUser(user);
-        setToken(accessToken);
-      }
-      navigate("/todoList");
+      !isLoading && (await request(values));
     },
   });
+  
   return (
     <Flex>
       <StyledForm onSubmit={handleSubmit}>

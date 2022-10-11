@@ -11,6 +11,7 @@ const TodoList = () => {
   const [content, setContent] = useState("");
   const tasks = useTaskContext();
   const { onGetTasks } = useSetTaskContext();
+
   useEffect(() => {
     onGetTasks();
   }, []);
